@@ -1,3 +1,5 @@
+import 'package:network/src/model/upload_file.dart';
+
 class NetworkRequest {
   final String method;
 
@@ -44,6 +46,47 @@ class NetworkRequest {
     this.endpointVersion = '',
     this.body,
   }) : method = 'DELETE';
+
+  NetworkRequest.graphQl(
+    final String query,
+    final Map<String, dynamic> variables,
+  )   : method = 'POST',
+        body = {
+          'query': query,
+          'variables': variables,
+        },
+        endpoint = '/graphql',
+        endpointVersion = '';
+
+  NetworkRequest.graphQlUpload({
+    required String query,
+    required Map<String, dynamic> variables,
+    required List<UploadFile> files,
+  })  : method = 'POST',
+        endpoint = '/graphql',
+        endpointVersion = '',
+        body = {
+          'operations': {
+            'query': query,
+            'variables': variables,
+          },
+          'map': _createUploadMap(files),
+          'files': <String, dynamic>{},
+        } {
+    for (var i = 0; i < files.length; i++) {
+      (body!['files'] as Map<String, dynamic>)[i.toString()] =
+          files[i].toMultipartFile();
+    }
+    addHeader('Content-Type', 'multipart/form-data');
+  }
+
+  static Map<String, List<String>> _createUploadMap(List<UploadFile> files) {
+    final map = <String, List<String>>{};
+    for (var i = 0; i < files.length; i++) {
+      map[i.toString()] = ['variables.${files[i].fieldName}'];
+    }
+    return map;
+  }
 
   NetworkRequest({
     required this.method,

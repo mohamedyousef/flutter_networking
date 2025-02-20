@@ -6,6 +6,7 @@ import 'package:network/src/create_refresh_access_token_options.dart';
 import 'package:network/src/interceptor/access_token_interceptor.dart';
 import 'package:network/src/interceptor/logging_intercepter.dart';
 import 'package:network/src/json_parser.dart';
+import 'package:network/src/model/graphql_response.dart';
 import 'package:network/src/model/network_request.dart';
 import 'package:network/src/model/network_response.dart';
 
@@ -51,7 +52,8 @@ class NetworkService {
   }
 
   void onHttpClientCreate(OnHttpClientCreate onHttpClientCreate) {
-    (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = onHttpClientCreate;
+    (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient =
+        onHttpClientCreate;
   }
 
   void _initInterceptors() {
@@ -115,6 +117,84 @@ class NetworkService {
         jsonParser: _jsonParser,
         statusCode: null,
         rawData: null,
+        errorType: NetworkErrorType.other,
+      );
+    }
+  }
+
+  Future<NetworkResponse<T>> executeGraphQLRequest<T>({
+    required NetworkRequest request,
+    required T Function(Map<String, dynamic>) fromJson,
+  }) async {
+    try {
+      final baseUrl = await baseUrlBuilder();
+      final response = await _dio.request(
+        baseUrl + request.endpoint,
+        data: request.body,
+        queryParameters: request.queryParameters,
+        options: Options(
+          method: request.method,
+          headers: request.headers,
+        ),
+      );
+
+      final responseData = response.data as Map<String, dynamic>;
+      final graphQLResponse =
+          GraphQLResponse<T>.fromJson(responseData, fromJson);
+      return graphQLResponse.toNetworkResponse();
+    } on DioException catch (dioException) {
+      return NetworkResponse.failure(
+        jsonParser: _jsonParser,
+        statusCode: dioException.response?.statusCode,
+        rawData: dioException.response?.data,
+        errorType: _getErrorType(dioException),
+      );
+    } catch (error) {
+      return NetworkResponse.failure(
+        jsonParser: _jsonParser,
+        statusCode: null,
+        rawData: error.toString(),
+        errorType: NetworkErrorType.other,
+      );
+    }
+  }
+
+  Future<NetworkResponse<T>> executeGraphQLUpload<T>({
+    required NetworkRequest request,
+    required T Function(Map<String, dynamic>) fromJson,
+    void Function(double progress)? onProgress,
+  }) async {
+    try {
+      final baseUrl = await baseUrlBuilder();
+      final response = await _dio.request(
+        baseUrl + request.endpoint,
+        data: request.body,
+        options: Options(
+          method: request.method,
+          headers: request.headers,
+          contentType: 'multipart/form-data',
+        ),
+        onSendProgress: onProgress != null
+            ? (count, total) => onProgress(count / total)
+            : null,
+      );
+
+      final responseData = response.data as Map<String, dynamic>;
+      final graphQLResponse =
+          GraphQLResponse<T>.fromJson(responseData, fromJson);
+      return graphQLResponse.toNetworkResponse();
+    } on DioException catch (dioException) {
+      return NetworkResponse.failure(
+        jsonParser: _jsonParser,
+        statusCode: dioException.response?.statusCode,
+        rawData: dioException.response?.data,
+        errorType: _getErrorType(dioException),
+      );
+    } catch (error) {
+      return NetworkResponse.failure(
+        jsonParser: _jsonParser,
+        statusCode: null,
+        rawData: error.toString(),
         errorType: NetworkErrorType.other,
       );
     }
