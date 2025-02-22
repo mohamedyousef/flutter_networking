@@ -47,10 +47,10 @@ class NetworkRequest {
     this.body,
   }) : method = 'DELETE';
 
-  NetworkRequest.graphQl(
-    final String query,
-    final Map<String, dynamic> variables,
-  )   : method = 'POST',
+  NetworkRequest.graphQl({
+    required final String query,
+    required final Map<String, dynamic> variables,
+  })  : method = 'POST',
         body = {
           'query': query,
           'variables': variables,
