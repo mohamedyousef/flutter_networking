@@ -52,8 +52,7 @@ class NetworkService {
   }
 
   void onHttpClientCreate(OnHttpClientCreate onHttpClientCreate) {
-    (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient =
-        onHttpClientCreate;
+    (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = onHttpClientCreate;
   }
 
   void _initInterceptors() {
@@ -139,8 +138,7 @@ class NetworkService {
       );
 
       final responseData = response.data as Map<String, dynamic>;
-      final graphQLResponse =
-          GraphQLResponse<T>.fromJson(responseData, fromJson);
+      final graphQLResponse = GraphQLResponse<T>.fromJson(responseData, fromJson);
       return graphQLResponse.toNetworkResponse();
     } on DioException catch (dioException) {
       return NetworkResponse.failure(
@@ -168,20 +166,17 @@ class NetworkService {
       final baseUrl = await baseUrlBuilder();
       final response = await _dio.request(
         baseUrl + request.endpoint,
-        data: request.body,
+        data: FormData.fromMap(request.body ?? {}),
         options: Options(
           method: request.method,
           headers: request.headers,
           contentType: 'multipart/form-data',
         ),
-        onSendProgress: onProgress != null
-            ? (count, total) => onProgress(count / total)
-            : null,
+        onSendProgress: onProgress != null ? (count, total) => onProgress(count / total) : null,
       );
 
       final responseData = response.data as Map<String, dynamic>;
-      final graphQLResponse =
-          GraphQLResponse<T>.fromJson(responseData, fromJson);
+      final graphQLResponse = GraphQLResponse<T>.fromJson(responseData, fromJson);
       return graphQLResponse.toNetworkResponse();
     } on DioException catch (dioException) {
       return NetworkResponse.failure(

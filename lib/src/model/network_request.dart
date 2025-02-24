@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:network/src/model/upload_file.dart';
 
 class NetworkRequest {
@@ -66,18 +68,18 @@ class NetworkRequest {
         endpoint = '/graphql',
         endpointVersion = '',
         body = {
-          'operations': {
+          'operations': jsonEncode({
             'query': query,
             'variables': variables,
-          },
-          'map': _createUploadMap(files),
-          'files': <String, dynamic>{},
+          }),
+          'map': jsonEncode(
+            _createUploadMap(files),
+          ),
         } {
     for (var i = 0; i < files.length; i++) {
-      (body!['files'] as Map<String, dynamic>)[i.toString()] =
-          files[i].toMultipartFile();
+      body?.putIfAbsent('$i', () => files[i].toMultipartFile());
     }
-    addHeader('Content-Type', 'multipart/form-data');
+    addHeader('content-type', 'multipart/form-data');
   }
 
   static Map<String, List<String>> _createUploadMap(List<UploadFile> files) {
