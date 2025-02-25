@@ -21,13 +21,9 @@ class GraphQLResponse<T> {
     T Function(Map<String, dynamic>) fromJson,
   ) {
     return GraphQLResponse(
-      data: json['data'] != null
-          ? fromJson(json['data'] as Map<String, dynamic>)
-          : null,
+      data: json['data'] != null ? fromJson(json['data'] as Map<String, dynamic>) : null,
       errors: json['errors'] != null
-          ? (json['errors'] as List)
-              .map((e) => GraphQLError.fromJson(e as Map<String, dynamic>))
-              .toList()
+          ? (json['errors'] as List).map((e) => GraphQLError.fromJson(e as Map<String, dynamic>)).toList()
           : null,
       extensions: json['extensions'] as Map<String, dynamic>?,
     );
@@ -65,7 +61,8 @@ class GraphQLResponse<T> {
 
     // Check extensions for specific error codes
     final firstError = errors.first;
-    final errorCode = firstError.extensions?['code'] as String?;
+    final errorMessage = firstError.extensions?['message'] as String?;
+    final errorCode = errorMessage ?? firstError.extensions?['code'] as String?;
 
     switch (errorCode?.toLowerCase()) {
       case 'unauthorized':
@@ -81,7 +78,7 @@ class GraphQLResponse<T> {
       case 'internal_server_error':
         return NetworkErrorType.server;
       default:
-        return NetworkErrorType.other;
+        return NetworkErrorType.operation;
     }
   }
 }

@@ -9,4 +9,5 @@ enum NetworkErrorType {
   badConnection,
   server, //500
   other,
+  operation,
 }
