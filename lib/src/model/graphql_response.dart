@@ -61,24 +61,24 @@ class GraphQLResponse<T> {
 
     // Check extensions for specific error codes
     final firstError = errors.first;
-    final errorMessage = firstError.extensions?['message'] as String?;
-    final errorCode = errorMessage ?? firstError.extensions?['code'] as String?;
+    final errorMessage = firstError.message;
+    final errorCode = firstError.extensions?['code'] as String?;
 
-    switch (errorCode?.toLowerCase()) {
-      case 'unauthorized':
-      case 'unauthenticated':
-        return NetworkErrorType.unauthorised;
-      case 'forbidden':
-        return NetworkErrorType.forbidden;
-      case 'validation':
-      case 'bad_request':
-        return NetworkErrorType.badRequest;
-      case 'not_found':
-        return NetworkErrorType.noData;
-      case 'internal_server_error':
-        return NetworkErrorType.server;
-      default:
-        return NetworkErrorType.operation;
+    if (errorCode == 'unauthorized' ||
+        errorCode == 'unauthenticated' ||
+        errorMessage.contains('Unauthorized') ||
+        errorMessage.contains('Unauthenticated')) {
+      return NetworkErrorType.unauthorised;
+    } else if (errorCode == 'forbidden' || errorMessage.contains('Forbidden')) {
+      return NetworkErrorType.forbidden;
+    } else if (errorMessage.contains('Bad Request')) {
+      return NetworkErrorType.badRequest;
+    } else if (errorCode == 'not_found') {
+      return NetworkErrorType.noData;
+    } else if (errorCode == 'internal_server_error' || errorMessage.contains('Internal Server Error')) {
+      return NetworkErrorType.server;
+    } else {
+      return NetworkErrorType.operation;
     }
   }
 }
