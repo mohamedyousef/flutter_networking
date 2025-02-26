@@ -5,9 +5,10 @@ import 'package:network/src/model/network_response.dart';
 
 class GraphQLResponse<T> {
   final T? data;
-  final List<GraphQLError>? errors;
+
   final Map<String, dynamic>? extensions;
   final JsonParser _jsonParser = JsonParser();
+  final List<Map<String, dynamic>>? errors;
   bool get hasErrors => errors != null && errors!.isNotEmpty;
 
   GraphQLResponse({
@@ -21,9 +22,13 @@ class GraphQLResponse<T> {
     T Function(Map<String, dynamic>) fromJson,
   ) {
     return GraphQLResponse(
-      data: json['data'] != null ? fromJson(json['data'] as Map<String, dynamic>) : null,
+      data: json['data'] != null
+          ? fromJson(json['data'] as Map<String, dynamic>)
+          : null,
       errors: json['errors'] != null
-          ? (json['errors'] as List).map((e) => GraphQLError.fromJson(e as Map<String, dynamic>)).toList()
+          ? (json['errors'] as List)
+              .map((e) => e as Map<String, dynamic>)
+              .toList()
           : null,
       extensions: json['extensions'] as Map<String, dynamic>?,
     );
@@ -49,7 +54,8 @@ class GraphQLResponse<T> {
           if (errors != null) 'errors': errors,
           if (extensions != null) 'extensions': extensions,
         },
-        errorType: _determineErrorType(errors),
+        errorType: _determineErrorType(
+            errors?.map((e) => GraphQLError.fromJson(e)).toList()),
       );
     }
   }
@@ -75,7 +81,8 @@ class GraphQLResponse<T> {
       return NetworkErrorType.badRequest;
     } else if (errorCode == 'not_found') {
       return NetworkErrorType.noData;
-    } else if (errorCode == 'internal_server_error' || errorMessage.contains('Internal Server Error')) {
+    } else if (errorCode == 'INTERNAL_SERVER_ERROR' ||
+        errorMessage.contains('Internal Server Error')) {
       return NetworkErrorType.server;
     } else {
       return NetworkErrorType.operation;
