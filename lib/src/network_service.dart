@@ -54,7 +54,8 @@ class NetworkService {
   }
 
   void onHttpClientCreate(OnHttpClientCreate onHttpClientCreate) {
-    (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = onHttpClientCreate;
+    (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient =
+        onHttpClientCreate;
   }
 
   void _initInterceptors() {
@@ -143,7 +144,8 @@ class NetworkService {
       );
 
       final responseData = response.data as Map<String, dynamic>;
-      final graphQLResponse = GraphQLResponse<T>.fromJson(responseData, fromJson);
+      final graphQLResponse =
+          GraphQLResponse<T>.fromJson(responseData, fromJson);
       final networkResponse = graphQLResponse.toNetworkResponse();
       networkResponse.ifHasError(
         (errorType) {
@@ -189,11 +191,14 @@ class NetworkService {
           headers: request.headers,
           contentType: 'multipart/form-data',
         ),
-        onSendProgress: onProgress != null ? (count, total) => onProgress(count / total) : null,
+        onSendProgress: onProgress != null
+            ? (count, total) => onProgress(count / total)
+            : null,
       );
 
       final responseData = response.data as Map<String, dynamic>;
-      final graphQLResponse = GraphQLResponse<T>.fromJson(responseData, fromJson);
+      final graphQLResponse =
+          GraphQLResponse<T>.fromJson(responseData, fromJson);
       return graphQLResponse.toNetworkResponse();
     } on DioException catch (dioException) {
       if (dioException.response?.statusCode == 401) {
@@ -259,7 +264,7 @@ class NetworkService {
     }
 
     if (statusCode == 401) {
-      return NetworkErrorType.unauthorised;
+      return NetworkErrorType.unauthorized;
     } else if (statusCode == 403) {
       return NetworkErrorType.forbidden;
     } else if (statusCode == 404) {
