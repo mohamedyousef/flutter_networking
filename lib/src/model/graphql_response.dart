@@ -22,14 +22,8 @@ class GraphQLResponse<T> {
     T Function(Map<String, dynamic>) fromJson,
   ) {
     return GraphQLResponse(
-      data: json['data'] != null
-          ? fromJson(json['data'] as Map<String, dynamic>)
-          : null,
-      errors: json['errors'] != null
-          ? (json['errors'] as List)
-              .map((e) => e as Map<String, dynamic>)
-              .toList()
-          : null,
+      data: json['data'] != null ? fromJson(json['data'] as Map<String, dynamic>) : null,
+      errors: json['errors'] != null ? (json['errors'] as List).map((e) => e as Map<String, dynamic>).toList() : null,
       extensions: json['extensions'] as Map<String, dynamic>?,
     );
   }
@@ -54,8 +48,7 @@ class GraphQLResponse<T> {
           if (errors != null) 'errors': errors,
           if (extensions != null) 'extensions': extensions,
         },
-        errorType: _determineErrorType(
-            errors?.map((e) => GraphQLError.fromJson(e)).toList()),
+        errorType: _determineErrorType(errors?.map((e) => GraphQLError.fromJson(e)).toList()),
       );
     }
   }
@@ -74,15 +67,14 @@ class GraphQLResponse<T> {
         errorCode == 'unauthenticated' ||
         errorMessage.contains('Unauthorized') ||
         errorMessage.contains('Unauthenticated')) {
-      return NetworkErrorType.unauthorised;
+      return NetworkErrorType.unauthorized;
     } else if (errorCode == 'forbidden' || errorMessage.contains('Forbidden')) {
       return NetworkErrorType.forbidden;
     } else if (errorMessage.contains('Bad Request')) {
       return NetworkErrorType.badRequest;
     } else if (errorCode == 'not_found') {
       return NetworkErrorType.noData;
-    } else if (errorCode == 'INTERNAL_SERVER_ERROR' ||
-        errorMessage.contains('Internal Server Error')) {
+    } else if (errorCode == 'INTERNAL_SERVER_ERROR' || errorMessage.contains('Internal Server Error')) {
       return NetworkErrorType.server;
     } else {
       return NetworkErrorType.operation;

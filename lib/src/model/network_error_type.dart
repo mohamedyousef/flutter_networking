@@ -2,7 +2,7 @@ enum NetworkErrorType {
   cancel,
   parsing,
   badRequest, //400
-  unauthorised, //401
+  unauthorized, //401
   forbidden, //403
   noData, //404
   unprocessable, //422
