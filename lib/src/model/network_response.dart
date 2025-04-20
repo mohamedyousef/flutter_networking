@@ -24,7 +24,8 @@ class NetworkResponse<T> {
     required T? dataOnSuccess,
     required dynamic rawData,
   }) {
-    return NetworkResponse<T>(true, jsonParser, statusCode, dataOnSuccess, rawData);
+    return NetworkResponse<T>(
+        true, jsonParser, statusCode, dataOnSuccess, rawData);
   }
 
   factory NetworkResponse.failure({
@@ -33,7 +34,8 @@ class NetworkResponse<T> {
     required dynamic rawData,
     required NetworkErrorType errorType,
   }) {
-    return NetworkResponse(false, jsonParser, statusCode, null, rawData, errorType);
+    return NetworkResponse(
+        false, jsonParser, statusCode, null, rawData, errorType);
   }
 
   K? getDataOnError<K>({required K Function(Map<String, dynamic>) fromJson}) {
@@ -55,6 +57,12 @@ class NetworkResponse<T> {
       }
     } else {
       return failure(_errorType!);
+    }
+  }
+
+  void ifHasError(void Function(NetworkErrorType networkErrorType) onHasError) {
+    if (_errorType != null) {
+      onHasError(_errorType!);
     }
   }
 }
