@@ -220,6 +220,102 @@ class NetworkService {
     }
   }
 
+  Future<NetworkResponse<T>> requestMultipart<T extends Object, K>({
+    required NetworkRequest request,
+    K Function(Map<String, dynamic>)? fromJson,
+    void Function(double progress)? onProgress,
+  }) async {
+    _dio.options.baseUrl = await baseUrlBuilder();
+    try {
+      final response =
+          await _requestMultiPart(request: request, onProgress: onProgress);
+      final dataObject = _jsonParser.parse<T, K>(response.data, fromJson);
+
+      if (fromJson == null && dataObject == null) {
+        return NetworkResponse.success(
+          jsonParser: _jsonParser,
+          statusCode: response.statusCode,
+          rawData: response.data,
+          dataOnSuccess: null,
+        );
+      }
+
+      if (dataObject != null) {
+        return NetworkResponse.success(
+          jsonParser: _jsonParser,
+          statusCode: response.statusCode,
+          rawData: response.data,
+          dataOnSuccess: dataObject,
+        );
+      } else {
+        return NetworkResponse.failure(
+          jsonParser: _jsonParser,
+          statusCode: response.statusCode,
+          rawData: response.data,
+          errorType: NetworkErrorType.parsing,
+        );
+      }
+    } on DioException catch (dioException) {
+      if (dioException.response?.statusCode == 401) {
+        onUnAuthorizedCallback?.call();
+      }
+      return NetworkResponse.failure(
+        jsonParser: _jsonParser,
+        statusCode: dioException.response?.statusCode,
+        rawData: dioException.response?.data,
+        errorType: _getErrorType(dioException),
+      );
+    } catch (error) {
+      return NetworkResponse.failure(
+        jsonParser: _jsonParser,
+        statusCode: null,
+        rawData: error.toString(),
+        errorType: NetworkErrorType.other,
+      );
+    }
+  }
+
+  Future<Response> _requestMultiPart({
+    required NetworkRequest request,
+    void Function(double progress)? onProgress,
+  }) async {
+    final formMap = <String, dynamic>{};
+    request.body?.forEach((key, value) {
+      if (value is List) {
+        formMap[key] = value
+            .map((file) => MultipartFile.fromFileSync(file.path,
+                filename: file.path.split(Platform.pathSeparator).last))
+            .toList();
+      } else if (value is File) {
+        formMap[key] = MultipartFile.fromFileSync(
+          value.path,
+          filename: value.path.split(Platform.pathSeparator).last,
+        );
+      } else {
+        formMap[key] = value;
+      }
+    });
+
+    final formData = FormData.fromMap(formMap);
+    final options = Options(
+      method: request.method,
+      headers: request.headers,
+      contentType: 'multipart/form-data',
+    );
+
+    final response = await _dio.request(
+      request.endpoint,
+      data: formData,
+      queryParameters: request.queryParameters,
+      options: options,
+      onSendProgress: onProgress != null
+          ? (count, total) => onProgress(count / (total == 0 ? 1 : total))
+          : null,
+    );
+
+    return response;
+  }
+
   Future<Response> _request(NetworkRequest request) {
     final options = Options(
       method: request.method,
