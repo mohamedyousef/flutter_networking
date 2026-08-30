@@ -335,6 +335,7 @@ class NetworkService {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
+      case DioExceptionType.transformTimeout:
       case DioExceptionType.connectionError:
         return NetworkErrorType.badConnection;
 
