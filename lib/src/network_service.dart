@@ -335,7 +335,6 @@ class NetworkService {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-      case DioExceptionType.transformTimeout:
       case DioExceptionType.connectionError:
         return NetworkErrorType.badConnection;
 
@@ -352,6 +351,15 @@ class NetworkService {
         } else {
           return NetworkErrorType.other;
         }
+
+      // Not matched by name: our dio constraint (^5.9.0) spans dio releases
+      // that don't all declare the same DioExceptionType members (e.g.
+      // transformTimeout only exists from 5.10.0 on), so naming every case
+      // here breaks compilation for half that range depending on which
+      // version pub resolves. Anything else dio adds is, so far, another
+      // flavor of timeout/connection failure.
+      default:
+        return NetworkErrorType.badConnection;
     }
   }
 
